@@ -75,10 +75,14 @@ namespace Personalregister
 
                 _repository.AddEmployee(newAnt);
                 Console.WriteLine($"Tillagd: {newAnt.Name} (ID: {newAnt.Id}).");
+                Console.Write("Tryck Enter för att fortsätta...");
+                Console.ReadLine();
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Fel: {ex.Message}");
+                Console.Write("Tryck Enter för att fortsätta...");
+                Console.ReadLine();
             }
         }
 
@@ -100,6 +104,8 @@ namespace Personalregister
             {
                 Console.WriteLine(emp.GetDetails());
             }
+            Console.Write("Tryck Enter för att fortsätta...");
+            Console.ReadLine();
         }
 
         private static void UpdateEmployee()
@@ -143,6 +149,9 @@ namespace Personalregister
 
             _repository.UpdateEmployee(emp);
             Console.WriteLine("Personal uppdaterad.");
+            Console.WriteLine($"Nuvarande: {emp.GetDetails()}");
+            Console.Write("Tryck Enter för att fortsätta...");
+            Console.ReadLine();
         }
 
         private static void RemoveEmployee()
@@ -151,11 +160,35 @@ namespace Personalregister
             if (!int.TryParse(Console.ReadLine(), out int id))
             {
                 Console.WriteLine("Ogiltigt ID.");
+                Console.Write("Tryck Enter för att fortsätta...");
+                Console.ReadLine();
+                return;
+            }
+
+            var emp = _repository.GetEmployeeById(id);
+            if (emp == null)
+            {
+                Console.WriteLine("Personal hittades inte.");
+                Console.Write("Tryck Enter för att fortsätta...");
+                Console.ReadLine();
+                return;
+            }
+
+            Console.WriteLine($"Följande kommer att tas bort: {emp.GetDetails()}");
+            Console.Write("Bekräfta borttagning? (j/n): ");
+            var confirm = Console.ReadLine()?.ToLower() ?? "";
+            if (confirm != "j")
+            {
+                Console.WriteLine("Borttagning avbröts.");
+                Console.Write("Tryck Enter för att fortsätta...");
+                Console.ReadLine();
                 return;
             }
 
             _repository.DeleteEmployee(id);
             Console.WriteLine("Personal borttagen.");
+            Console.Write("Tryck Enter för att fortsätta...");
+            Console.ReadLine();
         }
 
         private static void ListAllEmployees()
@@ -175,6 +208,8 @@ namespace Personalregister
                 Console.WriteLine(emp.GetDetails());
             }
             Console.WriteLine("--- Slut på listan ---");
+            Console.Write("Tryck Enter för att fortsätta...");
+            Console.ReadLine();
         }
 
         private static void AddBee()
@@ -189,6 +224,8 @@ namespace Personalregister
             _repository.AddEmployee(newBee);
             Console.WriteLine($"Tillagd: {newBee.Name} (ID: {newBee.Id}).");
             Console.WriteLine("Detta visar hur vi enkelt kan bygga ut systemet! (Polymorphism/Open-Closed Principle)");
+            Console.Write("Tryck Enter för att fortsätta...");
+            Console.ReadLine();
         }
     }
 }
