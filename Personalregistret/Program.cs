@@ -47,6 +47,15 @@ namespace Personalregister
                     case "6":
                         AddBee(); // Demonstrerar framtida utbyggnad
                         break;
+                    case "8":
+                        SaveSnapshot();
+                        break;
+                    case "9":
+                        LoadSnapshot();
+                        break;
+                    case "10":
+                        Benchmark();
+                        break;
                     case "7":
                         running = false;
                         break;
@@ -79,6 +88,9 @@ namespace Personalregister
             Console.WriteLine("4. Ta bort personal");
             Console.WriteLine("5. Visa all personal");
             Console.WriteLine("6. (Framtid) Lägg till Arbetsbi");
+            Console.WriteLine("8. Spara snapshot (JSONL)");
+            Console.WriteLine("9. Läs snapshot (JSONL)");
+            Console.WriteLine("10. Benchmark (generera testdata)");
             Console.WriteLine("7. Avsluta");
             Console.WriteLine();
             Console.Write("Val: ");
@@ -270,6 +282,75 @@ namespace Personalregister
             _repository.AddEmployee(newBee);
             WriteSuccess($"Tillagd: {newBee.Name} (ID: {newBee.Id}).");
             Console.WriteLine("Detta visar hur vi enkelt kan bygga ut systemet! (Polymorphism/Open-Closed Principle)");
+            Pause();
+        }
+
+        private static void SaveSnapshot()
+        {
+            if (_repository is Data.InMemoryEmployeeRepository mem)
+            {
+                Console.Write("Skriv sökväg att spara snapshot till (enter för default 'snapshot.jsonl'): ");
+                var path = Console.ReadLine();
+                if (string.IsNullOrWhiteSpace(path)) path = AppConfig.Current.SnapshotPath;
+                mem.SaveSnapshot(path);
+                WriteSuccess($"Snapshot sparad till {path}");
+            }
+            else
+            {
+                WriteError("Snapshot stöds endast för in-memory repository.");
+            }
+            Pause();
+        }
+
+        private static void LoadSnapshot()
+        {
+            if (_repository is Data.InMemoryEmployeeRepository mem)
+            {
+                Console.Write("Sökväg till snapshot att läsa (enter för default 'snapshot.jsonl'): ");
+                var path = Console.ReadLine();
+                if (string.IsNullOrWhiteSpace(path)) path = AppConfig.Current.SnapshotPath;
+                mem.LoadSnapshot(path);
+                WriteSuccess($"Snapshot inläst från {path}");
+            }
+            else
+            {
+                WriteError("Snapshot stöds endast för in-memory repository.");
+            }
+            Pause();
+        }
+
+        private static void Benchmark()
+        {
+            if (!(_repository is Data.InMemoryEmployeeRepository mem))
+            {
+                WriteError("Benchmark körs endast för in-memory repository.");
+                Pause();
+                return;
+            }
+
+            Console.Write("Antal testposter att skapa (t.ex. 500000): ");
+            if (!int.TryParse(Console.ReadLine(), out int n) || n <= 0)
+            {
+                WriteError("Ogiltigt tal.");
+                Pause();
+                return;
+            }
+
+            Console.WriteLine($"Skapar {n} poster...");
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            for (int i = 0; i < n; i++)
+            {
+                var a = new Ant($"Test_{i}", i % 2 == 0);
+                mem.AddEmployee(a);
+            }
+            sw.Stop();
+            WriteSuccess($"Infogade {n} poster på {sw.Elapsed.TotalSeconds:F2}s");
+
+            // Kör en sökningstest
+            sw.Restart();
+            var found = mem.SearchEmployees("Test_49999").ToList();
+            sw.Stop();
+            Console.WriteLine($"Sökning exekverades på {sw.Elapsed.TotalMilliseconds:F1}ms och hittade {found.Count} poster.");
             Pause();
         }
     }

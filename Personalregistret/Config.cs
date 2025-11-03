@@ -19,12 +19,17 @@ namespace Personalregister
                 if (!File.Exists(path)) return new AppConfig();
                 var txt = File.ReadAllText(path);
                 var cfg = JsonSerializer.Deserialize<AppConfig>(txt);
-                return cfg ?? new AppConfig();
+                Current = cfg ?? new AppConfig();
+                return Current;
             }
             catch
             {
-                return new AppConfig();
+                Current = new AppConfig();
+                return Current;
             }
         }
+
+        // Runtime singleton for easy access from models/repo
+        public static AppConfig Current { get; private set; } = new AppConfig();
     }
 }
