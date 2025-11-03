@@ -1,0 +1,9 @@
+{
+  "UseInMemory": true,
+  "TaxRates": {
+    "DAY": 0.30,
+    "NIGHT": 0.45
+  },
+  "SearchLimit": 200,
+  "SnapshotPath": "snapshot.jsonl"
+}

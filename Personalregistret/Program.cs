@@ -6,11 +6,22 @@ namespace Personalregister
 {
     class Program
     {
-        // Vi använder Dependency Injection (från SOLID)
-        // Programmet beror på en IEmployeeRepository, inte en specifik databas.
-        private static readonly IEmployeeRepository _repository = new EmployeeRepository("personal.db");
+    // Vi använder Dependency Injection (från SOLID)
+    // Programmet beror på en IEmployeeRepository, inte en specifik databas.
+    private static IEmployeeRepository _repository = null!;
         static void Main(string[] args)
         {
+            // Ladda konfiguration
+            var cfg = AppConfig.Load("config.json");
+            if (cfg.UseInMemory)
+            {
+                _repository = new Data.InMemoryEmployeeRepository(cfg);
+            }
+            else
+            {
+                _repository = new Data.EmployeeRepository("personal.db");
+            }
+
             // Enkel konsoll-UI: visa header och meny på ett snyggt sätt.
             bool running = true;
             while (running)
