@@ -9,27 +9,14 @@ namespace Personalregister
         // Vi använder Dependency Injection (från SOLID)
         // Programmet beror på en IEmployeeRepository, inte en specifik databas.
         private static readonly IEmployeeRepository _repository = new EmployeeRepository("personal.db");
-
         static void Main(string[] args)
         {
-            Console.WriteLine("Personalregister för Arbetsmyror (och framtida Bin!)");
-            Console.WriteLine($"Register inläst. Senaste kända klockslag: {_repository.GetLastReadTime()}");
-            Console.WriteLine("--------------------------------------------------");
-
+            // Enkel konsoll-UI: visa header och meny på ett snyggt sätt.
             bool running = true;
             while (running)
             {
-                Console.WriteLine("\nVälj ett alternativ:");
-                Console.WriteLine("1. Lägg till ny personal (Myra)");
-                Console.WriteLine("2. Sök personal");
-                Console.WriteLine("3. Uppdatera personal");
-                Console.WriteLine("4. Ta bort personal");
-                Console.WriteLine("5. Visa all personal");
-                Console.WriteLine("6. (Framtid) Lägg till Arbetsbi");
-                Console.WriteLine("7. Avsluta");
-                Console.Write("> ");
-
-                switch (Console.ReadLine())
+                var choice = ShowMenu();
+                switch (choice)
                 {
                     case "1":
                         AddEmployee();
@@ -53,10 +40,65 @@ namespace Personalregister
                         running = false;
                         break;
                     default:
-                        Console.WriteLine("Ogiltigt val. Försök igen.");
+                        WriteError("Ogiltigt val. Försök igen.");
+                        Pause();
                         break;
                 }
             }
+        }
+
+        // --- UI Helpers ---
+        private static void PrintHeader()
+        {
+            Console.Clear();
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine("Personalregister för Arbetsmyror (och framtida Bin!)");
+            Console.ResetColor();
+            Console.WriteLine($"Register inläst. Senaste kända klockslag: {_repository.GetLastReadTime()}");
+            Console.WriteLine(new string('-', 50));
+        }
+
+        private static string ShowMenu()
+        {
+            PrintHeader();
+            Console.WriteLine();
+            Console.WriteLine("1. Lägg till ny personal (Myra)");
+            Console.WriteLine("2. Sök personal");
+            Console.WriteLine("3. Uppdatera personal");
+            Console.WriteLine("4. Ta bort personal");
+            Console.WriteLine("5. Visa all personal");
+            Console.WriteLine("6. (Framtid) Lägg till Arbetsbi");
+            Console.WriteLine("7. Avsluta");
+            Console.WriteLine();
+            Console.Write("Val: ");
+            return Console.ReadLine() ?? string.Empty;
+        }
+
+        private static void Pause(string message = "Tryck Enter för att fortsätta...")
+        {
+            Console.Write(message);
+            Console.ReadLine();
+        }
+
+        private static bool Confirm(string prompt)
+        {
+            Console.Write(prompt + " ");
+            var ans = (Console.ReadLine() ?? string.Empty).Trim().ToLower();
+            return ans == "j" || ans == "y";
+        }
+
+        private static void WriteSuccess(string message)
+        {
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine(message);
+            Console.ResetColor();
+        }
+
+        private static void WriteError(string message)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine(message);
+            Console.ResetColor();
         }
 
         private static void AddEmployee()
@@ -67,22 +109,20 @@ namespace Personalregister
                 string name = Console.ReadLine() ?? "";
 
                 Console.Write("Arbetar nattskift (j/n): ");
-                bool isNightShift = Console.ReadLine()?.ToLower() == "j";
+                bool isNightShift = (Console.ReadLine() ?? string.Empty).Trim().ToLower() == "j";
 
                 // Här skapar vi en Myra. Detta uppfyller kravet om olika skattesatser
                 // och framtida expansion.
                 Ant newAnt = new Ant(name, isNightShift);
 
                 _repository.AddEmployee(newAnt);
-                Console.WriteLine($"Tillagd: {newAnt.Name} (ID: {newAnt.Id}).");
-                Console.Write("Tryck Enter för att fortsätta...");
-                Console.ReadLine();
+                WriteSuccess($"Tillagd: {newAnt.Name} (ID: {newAnt.Id}).");
+                Pause();
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Fel: {ex.Message}");
-                Console.Write("Tryck Enter för att fortsätta...");
-                Console.ReadLine();
+                WriteError($"Fel: {ex.Message}");
+                Pause();
             }
         }
 
@@ -95,7 +135,8 @@ namespace Personalregister
 
             if (!employees.Any())
             {
-                Console.WriteLine("Ingen personal hittades.");
+                WriteError("Ingen personal hittades.");
+                Pause();
                 return;
             }
 
@@ -104,8 +145,7 @@ namespace Personalregister
             {
                 Console.WriteLine(emp.GetDetails());
             }
-            Console.Write("Tryck Enter för att fortsätta...");
-            Console.ReadLine();
+            Pause();
         }
 
         private static void UpdateEmployee()
@@ -113,14 +153,16 @@ namespace Personalregister
             Console.Write("Ange ID på personal att uppdatera: ");
             if (!int.TryParse(Console.ReadLine(), out int id))
             {
-                Console.WriteLine("Ogiltigt ID.");
+                WriteError("Ogiltigt ID.");
+                Pause();
                 return;
             }
 
             var emp = _repository.GetEmployeeById(id);
             if (emp == null)
             {
-                Console.WriteLine("Personal hittades inte.");
+                WriteError("Personal hittades inte.");
+                Pause();
                 return;
             }
 
@@ -148,10 +190,9 @@ namespace Personalregister
             }
 
             _repository.UpdateEmployee(emp);
-            Console.WriteLine("Personal uppdaterad.");
+            WriteSuccess("Personal uppdaterad.");
             Console.WriteLine($"Nuvarande: {emp.GetDetails()}");
-            Console.Write("Tryck Enter för att fortsätta...");
-            Console.ReadLine();
+            Pause();
         }
 
         private static void RemoveEmployee()
@@ -159,36 +200,30 @@ namespace Personalregister
             Console.Write("Ange ID på personal att ta bort: ");
             if (!int.TryParse(Console.ReadLine(), out int id))
             {
-                Console.WriteLine("Ogiltigt ID.");
-                Console.Write("Tryck Enter för att fortsätta...");
-                Console.ReadLine();
+                WriteError("Ogiltigt ID.");
+                Pause();
                 return;
             }
 
             var emp = _repository.GetEmployeeById(id);
             if (emp == null)
             {
-                Console.WriteLine("Personal hittades inte.");
-                Console.Write("Tryck Enter för att fortsätta...");
-                Console.ReadLine();
+                WriteError("Personal hittades inte.");
+                Pause();
                 return;
             }
 
             Console.WriteLine($"Följande kommer att tas bort: {emp.GetDetails()}");
-            Console.Write("Bekräfta borttagning? (j/n): ");
-            var confirm = Console.ReadLine()?.ToLower() ?? "";
-            if (confirm != "j")
+            if (!Confirm("Bekräfta borttagning? (j/n):"))
             {
-                Console.WriteLine("Borttagning avbröts.");
-                Console.Write("Tryck Enter för att fortsätta...");
-                Console.ReadLine();
+                WriteError("Borttagning avbröts.");
+                Pause();
                 return;
             }
 
             _repository.DeleteEmployee(id);
-            Console.WriteLine("Personal borttagen.");
-            Console.Write("Tryck Enter för att fortsätta...");
-            Console.ReadLine();
+            WriteSuccess("Personal borttagen.");
+            Pause();
         }
 
         private static void ListAllEmployees()
@@ -198,7 +233,8 @@ namespace Personalregister
 
             if (!employees.Any())
             {
-                Console.WriteLine("Registret är tomt.");
+                WriteError("Registret är tomt.");
+                Pause();
                 return;
             }
 
@@ -208,8 +244,7 @@ namespace Personalregister
                 Console.WriteLine(emp.GetDetails());
             }
             Console.WriteLine("--- Slut på listan ---");
-            Console.Write("Tryck Enter för att fortsätta...");
-            Console.ReadLine();
+            Pause();
         }
 
         private static void AddBee()
@@ -222,10 +257,9 @@ namespace Personalregister
 
             Bee newBee = new Bee(name, wings);
             _repository.AddEmployee(newBee);
-            Console.WriteLine($"Tillagd: {newBee.Name} (ID: {newBee.Id}).");
+            WriteSuccess($"Tillagd: {newBee.Name} (ID: {newBee.Id}).");
             Console.WriteLine("Detta visar hur vi enkelt kan bygga ut systemet! (Polymorphism/Open-Closed Principle)");
-            Console.Write("Tryck Enter för att fortsätta...");
-            Console.ReadLine();
+            Pause();
         }
     }
 }
