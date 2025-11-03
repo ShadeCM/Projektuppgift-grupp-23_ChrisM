@@ -328,7 +328,7 @@ namespace Personalregister
                 return;
             }
 
-            Console.Write("Antal testposter att skapa (t.ex. 500000): ");
+            Console.Write("Antal testmyror att skapa (t.ex. 500000): ");
             if (!int.TryParse(Console.ReadLine(), out int n) || n <= 0)
             {
                 WriteError("Ogiltigt tal.");
@@ -336,21 +336,22 @@ namespace Personalregister
                 return;
             }
 
-            Console.WriteLine($"Skapar {n} poster...");
+            Console.WriteLine($"Skapar {n} testmyror...");
             var sw = System.Diagnostics.Stopwatch.StartNew();
             for (int i = 0; i < n; i++)
             {
-                var a = new Ant($"Test_{i}", i % 2 == 0);
+                var a = new Ant($"TestMyra_{i}", i % 2 == 0);
                 mem.AddEmployee(a);
             }
             sw.Stop();
-            WriteSuccess($"Infogade {n} poster på {sw.Elapsed.TotalSeconds:F2}s");
+            WriteSuccess($"Infogade {n} testmyror på {sw.Elapsed.TotalSeconds:F2}s");
 
             // Kör en sökningstest
             sw.Restart();
-            var found = mem.SearchEmployees("Test_49999").ToList();
+            // Sök efter testmyror som vi just skapade (namn börjar med "TestMyra_")
+            var found = mem.SearchEmployees("TestMyra_").ToList();
             sw.Stop();
-            Console.WriteLine($"Sökning exekverades på {sw.Elapsed.TotalMilliseconds:F1}ms och hittade {found.Count} poster.");
+            Console.WriteLine($"Sökning exekverades på {sw.Elapsed.TotalMilliseconds:F1}ms och hittade {found.Count} testmyror.");
             Pause();
         }
     }
