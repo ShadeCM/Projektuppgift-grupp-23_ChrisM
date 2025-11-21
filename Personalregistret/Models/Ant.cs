@@ -16,7 +16,20 @@ namespace Personalregister.Models
 
         public override double CalculateTaxRate()
         {
-            // Uppfyller kravet om olika skattesatser
+            // Läs skattesatser från konfiguration (AppConfig.Current)
+            try
+            {
+                var cfg = AppConfig.Current;
+                var key = WorksNightShift ? "NIGHT" : "DAY";
+                if (cfg.TaxRates != null && cfg.TaxRates.TryGetValue(key, out var rate))
+                {
+                    return rate;
+                }
+            }
+            catch
+            {
+                // fall tillbaka till hårdkodade värden
+            }
             return WorksNightShift ? 0.45 : 0.30;
         }
 
